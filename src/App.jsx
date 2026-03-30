@@ -30,20 +30,33 @@ const defaultData = {
 
 function loadData() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage?.getItem?.(STORAGE_KEY);
     if (raw) return { ...defaultData, ...JSON.parse(raw) };
   } catch {}
   return { ...defaultData };
 }
 
+// Use in-memory store with React state instead of localStorage
 const useAppData = () => {
-  const [data, setData] = useState(() => loadData());
-  const [loaded, setLoaded] = useState(true);
+  const [data, setData] = useState(defaultData);
+  const [loaded, setLoaded] = useState(false);
 
-  const save = useCallback((newData) => {
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await window.storage.get(STORAGE_KEY);
+        if (res && res.value) {
+          setData({ ...defaultData, ...JSON.parse(res.value) });
+        }
+      } catch {}
+      setLoaded(true);
+    })();
+  }, []);
+
+  const save = useCallback(async (newData) => {
     setData(newData);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
+      await window.storage.set(STORAGE_KEY, JSON.stringify(newData));
     } catch {}
   }, []);
 
@@ -997,6 +1010,10 @@ const styles = {
 // ==================== COMPONENTS ====================
 
 // -- Auth Screen --
+const ACCOUNTS_KEY = "glicovida-accounts";
+const loadAccounts = () => { try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || "[]"); } catch { return []; } };
+const saveAccounts = (acc) => { try { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(acc)); } catch {} };
+
 const AuthScreen = ({ onLogin }) => {
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({ name: "", email: "", password: "", diabetesType: "" });
@@ -1004,24 +1021,59 @@ const AuthScreen = ({ onLogin }) => {
   const [error, setError] = useState("");
 
   const handleSubmit = () => {
+    const accounts = loadAccounts();
+
     if (mode === "register") {
       if (!form.name || !form.email || !form.password || !form.diabetesType) {
         setError("Preencha todos os campos");
         return;
       }
-    } else {
-      if (!form.email || !form.password) {
-        setError("Preencha email e senha");
+      if (form.password.length < 6) {
+        setError("A senha deve ter pelo menos 6 caracteres");
         return;
       }
+      if (!form.email.includes("@") || !form.email.includes(".")) {
+        setError("Digite um e-mail válido");
+        return;
+      }
+      const exists = accounts.find(a => a.email.toLowerCase() === form.email.toLowerCase());
+      if (exists) {
+        setError("Este e-mail já está cadastrado. Faça login.");
+        return;
+      }
+      const newAccount = {
+        name: form.name,
+        email: form.email.toLowerCase(),
+        password: form.password,
+        diabetesType: form.diabetesType,
+        createdAt: new Date().toISOString(),
+      };
+      saveAccounts([...accounts, newAccount]);
+      setError("");
+      onLogin({
+        name: newAccount.name,
+        email: newAccount.email,
+        diabetesType: newAccount.diabetesType,
+        createdAt: newAccount.createdAt,
+      });
+    } else {
+      if (!form.email || !form.password) {
+        setError("Preencha e-mail e senha");
+        return;
+      }
+      const account = accounts.find(a => a.email.toLowerCase() === form.email.toLowerCase() && a.password === form.password);
+      if (!account) {
+        setError("E-mail ou senha incorretos. Verifique seus dados ou crie uma conta.");
+        return;
+      }
+      setError("");
+      onLogin({
+        name: account.name,
+        email: account.email,
+        diabetesType: account.diabetesType,
+        createdAt: account.createdAt,
+      });
     }
-    setError("");
-    onLogin({
-      name: form.name || "Usuário",
-      email: form.email,
-      diabetesType: form.diabetesType || "Tipo 1",
-      createdAt: new Date().toISOString(),
-    });
   };
 
   return (
