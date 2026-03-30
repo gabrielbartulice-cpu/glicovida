@@ -2670,6 +2670,21 @@ export default function GlicoVida() {
           <p style={{ fontSize: 10, color: COLORS.textLight, margin: "4px 0 0" }}>Feito com ❤️ por Gabriel Bartulici</p>
         </div>
 
+        {/* Terms of Use */}
+        <h3 style={{ ...styles.sectionTitle, marginTop: 20 }}><Shield size={18} color="#8B5CF6" /> Termos de Uso</h3>
+        <div style={{ ...styles.card, padding: 0, overflow: "hidden", cursor: "pointer" }} onClick={() => setModal("termsOfUse")}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: 16 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: "#F5F3FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Shield size={20} color="#8B5CF6" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 14, fontWeight: 700, color: COLORS.text, margin: 0 }}>Termos de Uso e Privacidade</p>
+              <p style={{ fontSize: 12, color: COLORS.textSecondary, margin: "2px 0 0" }}>Leia nossos termos e política de privacidade</p>
+            </div>
+            <ChevronRight size={18} color={COLORS.textLight} />
+          </div>
+        </div>
+
         {/* Dark Mode Toggle */}
         <div style={{ ...styles.card, display: "flex", alignItems: "center", gap: 12, padding: 16, marginTop: 20 }}>
           <Moon size={22} color="#8B5CF6" />
@@ -3575,6 +3590,63 @@ export default function GlicoVida() {
             <p style={{ fontSize: 12, color: COLORS.textSecondary, margin: 0, lineHeight: 1.5 }}>💡 {sub.tip}</p>
           </div>
         ))}
+      </Modal>
+
+      {/* Terms of Use Modal */}
+      <Modal open={modal === "termsOfUse"} onClose={() => setModal(null)} title="📜 Termos de Uso e Privacidade">
+        <div style={{ ...styles.card, background: COLORS.primaryBg, border: `1px solid ${COLORS.primary}20`, padding: 14, marginBottom: 16 }}>
+          <p style={{ fontSize: 12, color: COLORS.textSecondary, margin: 0 }}>Última atualização: Março de 2026</p>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 15, fontWeight: 800, color: COLORS.primary, margin: "0 0 8px" }}>1. Aceitação dos Termos</p>
+          <p style={{ fontSize: 13, color: COLORS.text, lineHeight: 1.7, margin: 0 }}>Ao acessar e utilizar o aplicativo GlicoVida, você concorda com estes Termos de Uso. Caso não concorde com algum dos termos, recomendamos que não utilize o aplicativo.</p>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 15, fontWeight: 800, color: COLORS.primary, margin: "0 0 8px" }}>2. Propriedade Intelectual</p>
+          <p style={{ fontSize: 13, color: COLORS.text, lineHeight: 1.7, margin: 0 }}>Todo o conteúdo do GlicoVida — incluindo código-fonte, design, textos, imagens, receitas, artigos educativos, funcionalidades e a marca GlicoVida — são de propriedade exclusiva de Gabriel Bartulici. É proibida a reprodução, distribuição, modificação, engenharia reversa ou qualquer forma de cópia total ou parcial do aplicativo sem autorização prévia por escrito do proprietário.</p>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 15, fontWeight: 800, color: COLORS.primary, margin: "0 0 8px" }}>3. Uso do Aplicativo</p>
+          <p style={{ fontSize: 13, color: COLORS.text, lineHeight: 1.7, margin: 0 }}>O GlicoVida é uma ferramenta de apoio à organização e ao controle diário da diabetes. O aplicativo destina-se ao uso pessoal e individual. O usuário é responsável pela veracidade dos dados que insere no aplicativo. É proibido utilizar o app para fins ilegais, compartilhar sua conta com terceiros ou tentar acessar áreas restritas do sistema.</p>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 15, fontWeight: 800, color: COLORS.primary, margin: "0 0 8px" }}>4. Isenção de Responsabilidade Médica</p>
+          <p style={{ fontSize: 13, color: COLORS.text, lineHeight: 1.7, margin: 0 }}>O GlicoVida NÃO substitui acompanhamento médico profissional. As informações, cálculos (como a calculadora de dose de insulina), receitas, artigos educativos e sugestões contidas no aplicativo têm caráter informativo e educacional. Nunca altere seu tratamento, medicação ou dose de insulina com base exclusivamente nas informações do app. Consulte sempre seu médico ou profissional de saúde antes de tomar qualquer decisão sobre seu tratamento.</p>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 15, fontWeight: 800, color: COLORS.primary, margin: "0 0 8px" }}>5. Privacidade e Dados</p>
+          <p style={{ fontSize: 13, color: COLORS.text, lineHeight: 1.7, margin: 0 }}>O GlicoVida respeita sua privacidade. Seus dados pessoais (nome, e-mail, registros de glicemia, alimentação, medicação e demais informações) são armazenados localmente no seu dispositivo. Não compartilhamos, vendemos ou transferimos seus dados pessoais para terceiros. Seus dados são de uso exclusivo seu e permanecem sob seu controle total. Ao excluir sua conta, todos os dados são removidos permanentemente do dispositivo.</p>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 15, fontWeight: 800, color: COLORS.primary, margin: "0 0 8px" }}>6. Conteúdo Educativo</p>
+          <p style={{ fontSize: 13, color: COLORS.text, lineHeight: 1.7, margin: 0 }}>Os artigos sobre direitos do diabético no SUS são baseados em fontes oficiais (Lei Federal nº 11.347/2006, Ministério da Saúde e Sociedade Brasileira de Diabetes). Porém, legislações e políticas públicas podem ser alteradas. Recomendamos verificar informações atualizadas diretamente nos órgãos oficiais.</p>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 15, fontWeight: 800, color: COLORS.primary, margin: "0 0 8px" }}>7. Pagamento e Reembolso</p>
+          <p style={{ fontSize: 13, color: COLORS.text, lineHeight: 1.7, margin: 0 }}>O acesso ao GlicoVida é feito mediante pagamento único. A política de reembolso segue as regras da plataforma de vendas utilizada (Kiwify) e o Código de Defesa do Consumidor, que garante o direito de arrependimento em até 7 dias após a compra.</p>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 15, fontWeight: 800, color: COLORS.primary, margin: "0 0 8px" }}>8. Modificações nos Termos</p>
+          <p style={{ fontSize: 13, color: COLORS.text, lineHeight: 1.7, margin: 0 }}>O GlicoVida reserva-se o direito de modificar estes Termos de Uso a qualquer momento. As alterações entram em vigor assim que publicadas no aplicativo. O uso continuado do app após alterações constitui aceitação dos novos termos.</p>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 15, fontWeight: 800, color: COLORS.primary, margin: "0 0 8px" }}>9. Contato</p>
+          <p style={{ fontSize: 13, color: COLORS.text, lineHeight: 1.7, margin: 0 }}>Em caso de dúvidas, sugestões ou solicitações sobre estes termos, entre em contato pelo e-mail: glicovida.contato@gmail.com</p>
+        </div>
+
+        <div style={{ ...styles.card, background: COLORS.bg, padding: 14, textAlign: "center" }}>
+          <p style={{ fontSize: 12, color: COLORS.textSecondary, margin: 0 }}>GlicoVida © 2025 — Todos os direitos reservados</p>
+          <p style={{ fontSize: 11, color: COLORS.textLight, margin: "4px 0 0" }}>Criado por Gabriel Bartulici</p>
+        </div>
       </Modal>
     </>
   );
