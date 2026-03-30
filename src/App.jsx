@@ -36,27 +36,14 @@ function loadData() {
   return { ...defaultData };
 }
 
-// Use in-memory store with React state instead of localStorage
 const useAppData = () => {
-  const [data, setData] = useState(defaultData);
-  const [loaded, setLoaded] = useState(false);
+  const [data, setData] = useState(() => loadData());
+  const [loaded, setLoaded] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await window.storage.get(STORAGE_KEY);
-        if (res && res.value) {
-          setData({ ...defaultData, ...JSON.parse(res.value) });
-        }
-      } catch {}
-      setLoaded(true);
-    })();
-  }, []);
-
-  const save = useCallback(async (newData) => {
+  const save = useCallback((newData) => {
     setData(newData);
     try {
-      await window.storage.set(STORAGE_KEY, JSON.stringify(newData));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
     } catch {}
   }, []);
 
@@ -1534,6 +1521,23 @@ export default function GlicoVida() {
           </div>
           <ChevronRight size={16} color={COLORS.textLight} />
         </button>
+
+        {/* Daily summary cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+          {[
+            { icon: "🩸", value: todayRecords.length, label: "Glicemias", color: COLORS.primary },
+            { icon: "🍽️", value: (data.foodDiary || []).filter(f => f.date === today()).length, label: "Refeições", color: COLORS.success },
+            { icon: "💊", value: (data.medications || []).filter(m => m.date === today()).length, label: "Medicações", color: "#8B5CF6" },
+            { icon: (() => { const todayMood = (data.emotionalDiary || []).find(e => e.date === today()); return todayMood ? (MOOD_OPTIONS.find(m => m.label === todayMood.mood)?.emoji || "😐") : "➖"; })(), value: (() => { const todayMood = (data.emotionalDiary || []).find(e => e.date === today()); return todayMood ? todayMood.mood : "—"; })(), label: "Humor", color: COLORS.accent },
+          ].map((s, i) => (
+            <div key={i} style={{ ...styles.card, textAlign: "center", padding: 10, marginBottom: 0 }}>
+              <span style={{ fontSize: 20 }}>{s.icon}</span>
+              <p style={{ fontSize: 14, fontWeight: 800, color: s.color, margin: "2px 0 0" }}>{s.value}</p>
+              <p style={{ fontSize: 9, color: COLORS.textSecondary, margin: 0, fontWeight: 600 }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+
         {lastRecord ? (
           <div style={{ ...styles.card, display: "flex", alignItems: "center", gap: 16 }}>
             <div style={{ width: 56, height: 56, borderRadius: 16, background: getGlucoseStatus(lastRecord.value).bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -1562,6 +1566,38 @@ export default function GlicoVida() {
 
       {/* Checklist progress */}
       <div style={styles.section}>
+        {/* Time in range indicator */}
+        {data.glucoseRecords.length >= 3 && (() => {
+          const last7 = data.glucoseRecords.filter(r => { const d = new Date(); d.setDate(d.getDate()-7); return r.date >= d.toISOString().split("T")[0]; });
+          const inRange = last7.filter(r => r.value >= 70 && r.value <= 180).length;
+          const pct = last7.length > 0 ? Math.round((inRange / last7.length) * 100) : 0;
+          const strokeColor = pct >= 70 ? COLORS.success : pct >= 50 ? COLORS.warning : COLORS.danger;
+          const circumference = 2 * Math.PI * 40;
+          const dashOffset = circumference - (pct / 100) * circumference;
+          return (
+            <div style={{ ...styles.card, display: "flex", alignItems: "center", gap: 20, padding: 16, marginBottom: 16 }}>
+              <div style={{ position: "relative", width: 90, height: 90, flexShrink: 0 }}>
+                <svg width="90" height="90" viewBox="0 0 100 100" style={{ transform: "rotate(-90deg)" }}>
+                  <circle cx="50" cy="50" r="40" fill="none" stroke={COLORS.bg} strokeWidth="10" />
+                  <circle cx="50" cy="50" r="40" fill="none" stroke={strokeColor} strokeWidth="10" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={dashOffset} style={{ transition: "stroke-dashoffset 1s ease" }} />
+                </svg>
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ fontSize: 22, fontWeight: 800, color: strokeColor }}>{pct}%</span>
+                </div>
+              </div>
+              <div>
+                <p style={{ fontSize: 15, fontWeight: 800, color: COLORS.text, margin: 0 }}>🎯 Tempo no Alvo</p>
+                <p style={{ fontSize: 12, color: COLORS.textSecondary, margin: "4px 0 0", lineHeight: 1.5 }}>
+                  {inRange} de {last7.length} medições nos últimos 7 dias ficaram entre 70-180 mg/dL
+                </p>
+                <span style={styles.badge(pct >= 70 ? COLORS.successBg : pct >= 50 ? COLORS.warningBg : COLORS.dangerBg, strokeColor)}>
+                  {pct >= 70 ? "Excelente!" : pct >= 50 ? "Bom, pode melhorar" : "Atenção necessária"}
+                </span>
+              </div>
+            </div>
+          );
+        })()}
+
         <div style={styles.card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <h3 style={{ fontSize: 15, fontWeight: 800, color: COLORS.text, margin: 0 }}>✅ Checklist de Hoje</h3>
@@ -1594,6 +1630,21 @@ export default function GlicoVida() {
         <GlucoseChartMini records={data.glucoseRecords} />
       </div>
 
+      {/* Mini weekly ranking */}
+      <div style={styles.section}>
+        <div style={{ ...styles.card, background: `linear-gradient(135deg, #FFFBEB, #FEF3C7)`, border: `1px solid #F59E0B30`, display: "flex", alignItems: "center", gap: 16, padding: 16 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+            <span style={{ fontSize: 32 }}>{scoreLevelEmoji}</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 14, fontWeight: 800, color: COLORS.text, margin: 0 }}>Ranking Semanal</p>
+            <p style={{ fontSize: 22, fontWeight: 800, color: COLORS.accent, margin: "2px 0 0" }}>{weeklyScore} pts</p>
+            <span style={styles.badge(COLORS.accentLight, COLORS.accent)}>Nível {scoreLevel}</span>
+          </div>
+          <button onClick={() => setTab("profile")} style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.primary, fontWeight: 700, fontSize: 12, fontFamily: "inherit" }}>Ver mais →</button>
+        </div>
+      </div>
+
       {/* Reminders */}
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}><Bell size={18} color={COLORS.accent} /> Lembretes de Hoje</h3>
@@ -1609,6 +1660,31 @@ export default function GlicoVida() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Recipe of the day */}
+      <div style={styles.section}>
+        {(() => {
+          const dayOfWeek = new Date().getDay();
+          const recipe = allRecipes[dayOfWeek % allRecipes.length];
+          return (
+            <div style={{ ...styles.card, padding: 0, overflow: "hidden", cursor: "pointer" }} onClick={() => { setTab("food"); }}>
+              <div style={{ background: `linear-gradient(135deg, ${COLORS.successBg}, #ECFDF5)`, padding: 14, display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ fontSize: 36 }}>{recipe.emoji}</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: COLORS.success, margin: "0 0 2px" }}>👨‍🍳 Receita do Dia</p>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: COLORS.text, margin: 0 }}>{recipe.name}</p>
+                  <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+                    <span style={styles.badge("#fff", COLORS.textSecondary)}>⏱️ {recipe.time}</span>
+                    <span style={styles.badge("#fff", COLORS.primary)}>{recipe.carbs}g carbs</span>
+                    <span style={styles.badge("#fff", recipe.gi === "baixo" ? COLORS.success : COLORS.warning)}>IG {recipe.gi}</span>
+                  </div>
+                </div>
+                <ChevronRight size={18} color={COLORS.textLight} />
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Daily motivation */}
