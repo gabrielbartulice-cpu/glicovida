@@ -32,7 +32,7 @@ function loadData() {
   try {
     const raw = localStorage?.getItem?.(STORAGE_KEY);
     if (raw) return { ...defaultData, ...JSON.parse(raw) };
-  } catch {}
+  } catch (e) { console.error("Erro ao carregar dados:", e); }
   return { ...defaultData };
 }
 
@@ -44,7 +44,7 @@ const useAppData = () => {
     setData(newData);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
-    } catch {}
+    } catch (e) { console.error("Erro ao salvar dados:", e); }
   }, []);
 
   return { data, save, loaded };
@@ -998,8 +998,9 @@ const styles = {
 
 // -- Auth Screen --
 const ACCOUNTS_KEY = "glicovida-accounts";
-const loadAccounts = () => { try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || "[]"); } catch { return []; } };
-const saveAccounts = (acc) => { try { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(acc)); } catch {} };
+const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASS || "Diabetes no controle";
+const loadAccounts = () => { try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || "[]"); } catch (e) { console.error("Erro ao carregar contas:", e); return []; } };
+const saveAccounts = (acc) => { try { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(acc)); } catch (e) { console.error("Erro ao salvar contas:", e); } };
 
 const AuthScreen = ({ onLogin }) => {
   const [mode, setMode] = useState("login");
@@ -1244,7 +1245,6 @@ export default function GlicoVida() {
   const [adminPassword, setAdminPassword] = useState("");
   const [adminUnlocked, setAdminUnlocked] = useState(false);
   const [adminError, setAdminError] = useState("");
-  const ADMIN_PASS = "Diabetes no controle";
   const [insulinCalc, setInsulinCalc] = useState({ currentGlucose: "", targetGlucose: "120", carbsEaten: "", correctionFactor: "50", icRatio: "15" });
   const [moodForm, setMoodForm] = useState({ mood: "", notes: "" });
   const allRecipes = [...RECIPES_DATA, ...EXTRA_RECIPES];
@@ -2423,7 +2423,7 @@ export default function GlicoVida() {
 
   // ==================== TAB: PROFILE (Phase 3 Enhanced) ====================
   const renderProfile = () => {
-    const daysUsing = Math.max(1, Math.ceil((Date.now() - new Date(data.user.createdAt).getTime()) / 86400000));
+    const daysUsing = Math.max(1, Math.ceil((Date.now() - new Date(data.user.createdAt || new Date().toISOString()).getTime()) / 86400000));
     const totalGlucose = data.glucoseRecords.length;
     const totalMeals = (data.foodDiary || []).length;
     const totalMeds = (data.medications || []).length;
@@ -3243,7 +3243,7 @@ export default function GlicoVida() {
                 <p style={{ fontSize: 13, color: COLORS.text, margin: 0, lineHeight: 1.8 }}>
                   Nome: {data.user.name}{"\n"}
                   Tipo: Diabetes {data.user.diabetesType}{"\n"}
-                  Período de uso: {Math.max(1, Math.ceil((Date.now() - new Date(data.user.createdAt).getTime()) / 86400000))} dias{"\n"}
+                  Período de uso: {Math.max(1, Math.ceil((Date.now() - new Date(data.user.createdAt || new Date().toISOString()).getTime()) / 86400000))} dias{"\n"}
                   Total de medições: {recs.length}
                 </p>
               </div>
@@ -3404,7 +3404,7 @@ export default function GlicoVida() {
           const meds = data.medications || [];
           const goals = data.goals || [];
           const habits = data.habits || [];
-          const daysUsing = Math.max(1, Math.ceil((Date.now() - new Date(data.user.createdAt).getTime()) / 86400000));
+          const daysUsing = Math.max(1, Math.ceil((Date.now() - new Date(data.user.createdAt || new Date().toISOString()).getTime()) / 86400000));
 
           // Usage by feature
           const features = [
